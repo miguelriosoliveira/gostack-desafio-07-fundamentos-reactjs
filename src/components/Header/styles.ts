@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 interface ContainerProps {
   size?: 'small' | 'large';
@@ -15,22 +15,33 @@ export const Container = styled.div<ContainerProps>`
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+`;
 
-    nav {
-      a {
-        color: #fff;
-        text-decoration: none;
-        font-size: 16px;
-        transition: opacity 0.2s;
+interface SpanProps {
+  selected: boolean;
+}
 
-        & + a {
-          margin-left: 32px;
-        }
+export const Span = styled.span<SpanProps>`
+  & + span {
+    margin-left: 32px;
+  }
 
-        &:hover {
-          opacity: 0.6;
-        }
-      }
+  a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.6;
     }
+
+    ${({ selected }) =>
+      selected &&
+      css`
+        padding-bottom: 10px;
+        border-bottom: 2px solid #ff872c;
+      `}
   }
 `;

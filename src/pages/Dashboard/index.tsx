@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
 
 import income from '../../assets/income.svg';
 import outcome from '../../assets/outcome.svg';
@@ -18,19 +17,38 @@ interface Transaction {
   formattedValue: string;
   formattedDate: string;
   type: 'income' | 'outcome';
-  category: { title: string };
   created_at: string;
+  category: {
+    title: string;
+  };
 }
 
 interface Balance {
+  income: string;
+  outcome: string;
+  total: string;
+}
+
+interface TransactionFromBackend {
+  id: string;
+  title: string;
+  value: number;
+  type: 'income' | 'outcome';
+  created_at: string;
+  category: {
+    title: string;
+  };
+}
+
+interface BalanceFromBackend {
   income: number;
   outcome: number;
   total: number;
 }
 
 interface TransactionsResponse {
-  transactions: Transaction[];
-  balance: Balance;
+  transactions: TransactionFromBackend[];
+  balance: BalanceFromBackend;
 }
 
 const Dashboard: React.FC = () => {
@@ -41,10 +59,21 @@ const Dashboard: React.FC = () => {
     api
       .get<TransactionsResponse>('transactions')
       .then(response => {
-        setTransactions(response.data.transactions);
-        setBalance(response.data.balance);
+        const formattedTransactions = response.data.transactions.map(transaction => ({
+          ...transaction,
+          formattedValue:
+            (transaction.type === 'outcome' ? '- ' : '') + formatValue(transaction.value),
+          formattedDate: new Date(transaction.created_at).toLocaleDateString('pt-br'),
+        }));
+        const formattedBalance = {
+          income: formatValue(response.data.balance.income),
+          outcome: formatValue(response.data.balance.outcome),
+          total: formatValue(response.data.balance.total),
+        };
+        setTransactions(formattedTransactions);
+        setBalance(formattedBalance);
       })
-      .catch(err => console.error(err.response.error));
+      .catch(error => console.error(error));
   }, []);
 
   return (
@@ -57,21 +86,21 @@ const Dashboard: React.FC = () => {
               <p>Entradas</p>
               <img src={income} alt="Income" />
             </header>
-            <h1 data-testid="balance-income">{formatValue(balance.income)}</h1>
+            <h1 data-testid="balance-income">{balance.income}</h1>
           </Card>
           <Card>
             <header>
               <p>Saídas</p>
               <img src={outcome} alt="Outcome" />
             </header>
-            <h1 data-testid="balance-outcome">{formatValue(balance.outcome)}</h1>
+            <h1 data-testid="balance-outcome">{balance.outcome}</h1>
           </Card>
           <Card total>
             <header>
               <p>Total</p>
               <img src={total} alt="Total" />
             </header>
-            <h1 data-testid="balance-total">{formatValue(balance.total)}</h1>
+            <h1 data-testid="balance-total">{balance.total}</h1>
           </Card>
         </CardContainer>
 
@@ -90,12 +119,9 @@ const Dashboard: React.FC = () => {
               {transactions.map(transaction => (
                 <tr key={transaction.id}>
                   <td className="title">{transaction.title}</td>
-                  <td className={transaction.type}>
-                    {transaction.type === 'outcome' && '- '}
-                    {formatValue(transaction.value)}
-                  </td>
+                  <td className={transaction.type}>{transaction.formattedValue}</td>
                   <td>{transaction.category.title}</td>
-                  <td>{format(parseISO(transaction.created_at), 'dd/MM/yyyy')}</td>
+                  <td>{transaction.formattedDate}</td>
                 </tr>
               ))}
             </tbody>

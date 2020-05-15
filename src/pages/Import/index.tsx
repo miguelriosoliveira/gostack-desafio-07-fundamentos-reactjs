@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import filesize from 'filesize';
+
+import alert from '../../assets/alert.svg';
+import api from '../../services/api';
 
 import Header from '../../components/Header';
 import FileList from '../../components/FileList';
@@ -7,13 +11,10 @@ import Upload from '../../components/Upload';
 
 import { Container, Title, ImportFileContainer, Footer } from './styles';
 
-import alert from '../../assets/alert.svg';
-import api from '../../services/api';
-
 interface FileProps {
   file: File;
   name: string;
-  readableSize: number;
+  readableSize: string;
 }
 
 const Import: React.FC = () => {
@@ -33,7 +34,13 @@ const Import: React.FC = () => {
   }
 
   function submitFile(files: File[]): void {
-    setUploadedFiles(files.map(file => ({ file, name: file.name, readableSize: file.size })));
+    setUploadedFiles(
+      files.map(file => ({
+        file,
+        name: file.name,
+        readableSize: filesize(file.size),
+      })),
+    );
   }
 
   return (
